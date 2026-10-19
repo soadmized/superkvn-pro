@@ -1,5 +1,5 @@
 # SUPERKVN - (почти) неубиваемый kvn
-[![GitHub Repo stars](https://img.shields.io/github/stars/soadmized/superkvn-landing?logo=github&style=flat-square)](https://github.com/soadmized/superkvn)
+[![GitHub Repo stars](https://img.shields.io/github/stars/soadmized/superkvn-pro?logo=github&style=flat-square)](https://github.com/soadmized/superkvn-pro)
 ---
 **SUPERKVN** - проект, который поднимает плохо детектируемое защищенное соединение с сервером через TLS и vless.
 
