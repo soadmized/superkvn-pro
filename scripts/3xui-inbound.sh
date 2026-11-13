@@ -5,6 +5,15 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$script_dir/api-lib.sh"
 validate_profile_env
 action=${1:-check}
+if [ "$action" = list ]; then
+    fetch_inbounds
+    printf 'ID\tPORT\tTRANSPORT\tCLIENTS\tREMARK\n'
+    printf '%s' "$response" | jq -r '
+        def decoded: if type == "string" then fromjson else . end;
+        .obj[] | [.id, .port, (.streamSettings|decoded|.network),
+            (.settings|decoded|.clients // []|length), .remark] | @tsv'
+    exit 0
+fi
 load_inbounds
 
 case "$action" in
@@ -15,12 +24,15 @@ case "$action" in
             printf 'Inbound соответствует конфигурации.\n'
             exit 0
         fi
+        if [ "$action" = ensure ] && [ "$(printf '%s' "$response" | jq '.obj | length')" -gt 0 ]; then
+            fail 'В панели уже есть inbound, но ни один не совпал с NETWORK_PORT/INBOUND_REMARK. Выполните make 3xui-list-inbounds и выберите существующий вход для миграции. Для отдельного нового входа используйте make 3xui-create-inbound.'
+        fi
         uuid=$(cat /proc/sys/kernel/random/uuid)
         payload=$(jq -nc --arg remark "$INBOUND_REMARK" --argjson port "$NETWORK_PORT" \
             --arg uuid "$uuid" --arg subId "$(printf '%s' "$uuid" | tr -d '-')" \
             --argjson stream "$(transport_settings)" '
             {enable:true, remark:$remark, listen:"", port:$port, protocol:"vless",
-             settings:({clients:[{id:$uuid,email:"user",subId:$subId,enable:true,flow:"",
+             settings:({clients:[{id:$uuid,email:("user-"+$uuid),subId:$subId,enable:true,flow:"",
                 limitIp:0,totalGB:0,expiryTime:0,tgId:0,reset:0}],decryption:"none",fallbacks:[]}|tojson),
              streamSettings:($stream|tojson), sniffing:({enabled:false}|tojson), tag:("inbound-"+($port|tostring))}')
         api_post add "$payload"
@@ -51,5 +63,5 @@ case "$action" in
         api_post "update/$inbound_id" "$payload"
         printf 'Транспорт изменён на %s. Резервная копия: %s\n' "$NETWORK_TRANSPORT" "$backup"
         ;;
-    *) fail 'Использование: 3xui-inbound.sh [ensure|create|check|migrate]';;
+    *) fail 'Использование: 3xui-inbound.sh [list|ensure|create|check|migrate]';;
 esac

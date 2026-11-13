@@ -1,9 +1,13 @@
 #!/bin/sh
 # Caller uses set -eu and sources profile-lib.sh first.
-load_inbounds() {
+fetch_inbounds() {
     response=$(curl -fsS --connect-timeout 10 --max-time 30 -b "$COOKIE_FILE" "${API_BASE}panel/api/inbounds/list")
     printf '%s' "$response" | jq -e '.success == true and (.obj | type == "array")' >/dev/null \
         || fail 'Не удалось получить список inbound.'
+}
+
+load_inbounds() {
+    fetch_inbounds
     matches=$(printf '%s' "$response" | jq -c --arg remark "$INBOUND_REMARK" --arg port "$NETWORK_PORT" \
         '[.obj[] | select(.remark == $remark or (.port | tostring) == $port)]')
     match_count=$(printf '%s' "$matches" | jq 'length')

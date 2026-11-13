@@ -1,4 +1,4 @@
-.PHONY: check-env check-3xui up down logs nginx-http ssl-init ssl-renew cron-install cron-remove restart gen-pass 3xui-settings 3xui-login 3xui-create-inbound 3xui-inbound-exists 3xui-ensure-inbound 3xui-export-creds 3xui-add-client 3xui-init deploy xray-up nginx-https 3xui-export-links 3xui-migrate-transport test
+.PHONY: check-env check-3xui up down logs nginx-http ssl-init ssl-renew cron-install cron-remove restart gen-pass 3xui-settings 3xui-login 3xui-create-inbound 3xui-inbound-exists 3xui-ensure-inbound 3xui-export-creds 3xui-add-client 3xui-init deploy xray-up nginx-https 3xui-export-links 3xui-migrate-transport 3xui-list-inbounds test
 
 -include .env
 export
@@ -12,7 +12,7 @@ XUI_EXEC = docker exec -e API_BASE -e COOKIE_FILE -e CSRF_TOKEN_FILE -e DOMAIN -
 XUI_PASS_FILE=$(HOME)/creds.txt
 CREDS_FILE=$(HOME)/creds.txt
 XUI_CONTAINER=xray
-INBOUND_REMARK=$(DOMAIN)-$(NETWORK_PORT)
+INBOUND_REMARK ?= $(DOMAIN)-$(NETWORK_PORT)
 CRON_CMD=cd $(PWD) && $(MAKE) ssl-renew >> /var/log/ssl-renew.log 2>&1
 CRON_JOB=0 3 * * * $(CRON_CMD)
 
@@ -139,6 +139,9 @@ API_BASE=http://127.0.0.1:$(UI_PORT)/$(UI_DUMMY_PATH)/$(UI_PATH)/
 	@echo "✅ Авторизация успешна"
 
 # Shared API checks distinguish missing inbound from authentication/server failures.
+3xui-list-inbounds: 3xui-login
+	@$(XUI_EXEC) /opt/superkvn/3xui-inbound.sh list
+
 3xui-create-inbound: 3xui-login
 	@$(XUI_EXEC) /opt/superkvn/3xui-inbound.sh create
 
