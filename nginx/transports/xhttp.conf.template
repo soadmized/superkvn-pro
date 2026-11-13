@@ -1,0 +1,14 @@
+    location ^~ /${NETWORK_PATH}/ {
+        # XHTTP stream-up: streaming HTTP/2, including the upload body.
+        # grpc_pass speaks cleartext HTTP/2 to Xray inside the Docker network.
+        grpc_pass grpc://xray:${NETWORK_PORT};
+        grpc_set_header Host $host;
+        grpc_set_header X-Real-IP $remote_addr;
+        # Client IP is recorded by nginx; do not pass untrusted forwarded headers.
+        grpc_set_header X-Forwarded-For "";
+        grpc_read_timeout 3600s;
+        grpc_send_timeout 3600s;
+        grpc_socket_keepalive on;
+        client_max_body_size 0;
+        client_body_timeout 3600s;
+    }

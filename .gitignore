@@ -2,3 +2,4 @@
 .env
 default.conf
 db/
+__pycache__/

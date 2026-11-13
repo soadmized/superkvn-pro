@@ -20,10 +20,11 @@ services:
     container_name: xray
     volumes:
       - ./db:/etc/x-ui
+      - ./scripts:/opt/superkvn:ro
     env_file:
       - .env
     ports:
-      - "${UI_PORT}:${UI_PORT}"
+      - "127.0.0.1:${UI_PORT}:${UI_PORT}"
     expose:
       - "${NETWORK_PORT}"
     restart: unless-stopped
